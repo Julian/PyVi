@@ -64,22 +64,32 @@ class Buffer(object):
         row, column = self.cursors[cursor_owner]
         left, right = self[row][:column], self[row][column:]
         last_line = lines[-1] if lines else first_line
+        added = len(lines)
 
         self[row] = left + first_line
         self[row + 1: row + 1] = lines
-        new_row, new_column = row + len(lines), len(last_line)
+        new_row, new_column = row + added, len(last_line)
         self[new_row] += right
         self.cursors[cursor_owner] = new_row, new_column
 
+        for owner, (other_row, other_column) in self.cursors.iteritems():
+            if owner != cursor_owner and other_row > row:
+                self.cursors[owner] = (other_row + added, other_column)
+
 
 class Window(object):
-    def __init__(self, buffer):
+    def __init__(self, buffer, cursor=(0, 0)):
         self.buffer = buffer
         buffer.create_cursor(self)
+        self.cursor = cursor
 
     @property
     def cursor(self):
         return self.buffer.cursors[self]
+
+    @cursor.setter
+    def cursor(self, new_position):
+        self.buffer.cursors[self] = new_position
 
     def insert(self, *lines):
         self.buffer.insert(self, *lines)

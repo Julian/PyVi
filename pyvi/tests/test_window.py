@@ -58,7 +58,8 @@ class TestBufferCursor(TestCase):
         self.assertEqual(self.buffer.cursors[self.cursor_owner], (1, 1))
 
     def test_set_cursor(self):
-        pass
+        self.buffer.cursors[self.cursor_owner] = 2, 2
+        self.assertEqual(self.buffer.cursors[self.cursor_owner], (2, 2))
 
     def test_insert(self):
         self.buffer.insert(self.cursor_owner, u"foo")
