@@ -1,14 +1,15 @@
-import collections
-import itertools
+from pyvi import events
 
 
 class Buffer(object):
     def __init__(self, iterable=(u"",)):
         self._iter = iter(iterable)
         self._lines = []
-        self.has_unread_lines = True
+        self.done_reading = False
 
-        self.cursors = {}
+        self.cursors = events.NoisyContainer(
+            {}, event=events.CURSOR_MOVED, key_label="window"
+        )
 
     def __getitem__(self, i):
         if isinstance(i, slice):
@@ -28,7 +29,7 @@ class Buffer(object):
     def __iter__(self):
         for line in self._lines:
             yield line
-        while self.has_unread_lines:
+        while not self.done_reading:
             self._read_further(how_many=1)
             yield self[-1]
 
@@ -42,14 +43,14 @@ class Buffer(object):
 
 
     def _read_further(self, how_many=None):
-        if not self.has_unread_lines:
+        if self.done_reading:
             return
 
         if how_many is not None:
             lines = (next(self._iter) for _ in xrange(how_many))
         else:
             lines = self._iter
-            self.has_unread_lines = False
+            self.done_reading = True
 
         for line in lines:
             self.append(line)
@@ -63,12 +64,18 @@ class Buffer(object):
     def insert(self, cursor_owner, first_line, *lines):
         row, column = self.cursors[cursor_owner]
         left, right = self[row][:column], self[row][column:]
-        last_line = lines[-1] if lines else first_line
         added = len(lines)
+
+        if lines:
+            last_line = lines[-1]
+            new_column = len(last_line)
+        else:
+            last_line = first_line
+            new_column = column + len(first_line)
 
         self[row] = left + first_line
         self[row + 1: row + 1] = lines
-        new_row, new_column = row + added, len(last_line)
+        new_row = row + added
         self[new_row] += right
         self.cursors[cursor_owner] = new_row, new_column
 
@@ -78,7 +85,14 @@ class Buffer(object):
 
 
 class Window(object):
-    def __init__(self, buffer, cursor=(0, 0)):
+
+    editor = None
+    events = None
+
+    def __init__(self, buffer=None, cursor=(0, 0)):
+        if buffer is None:
+            buffer = Buffer()
+
         self.buffer = buffer
         buffer.create_cursor(self)
         self.cursor = cursor
@@ -94,7 +108,39 @@ class Window(object):
     def insert(self, *lines):
         self.buffer.insert(self, *lines)
 
+    def trigger(self, **event):
+        if self.events is not None:
+            self.events.trigger(**event)
+
 
 class Tab(object):
-    def __init__(self, *windows):
-        self.windows = list(windows)
+
+    active_window = None
+    _editor = None
+    events = None
+
+    def __init__(self, windows=None):
+        if windows is None:
+            self.windows = [[Window()]]
+        else:
+            self.windows = [list(row) for row in windows]
+
+        if self.windows:
+            self.active_window = self.windows[0][0]
+
+    def __iter__(self):
+        return iter(self.windows)
+
+    @property
+    def editor(self):
+        return self._editor
+
+    @editor.setter
+    def editor(self, editor):
+        self._editor = editor
+        self.events = editor.events
+
+        for row in self:
+            for window in row:
+                window.editor = editor
+                window.events = editor.events

@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import mock
 
-from pyvi import window
+from pyvi import editor, window
 
 
 class TestBuffer(TestCase):
@@ -62,7 +62,10 @@ class TestBufferCursor(TestCase):
         self.assertEqual(self.buffer.cursors[self.cursor_owner], (2, 2))
 
     def test_insert(self):
-        self.buffer.insert(self.cursor_owner, u"foo")
+        self.buffer.insert(self.cursor_owner, u"fo")
+        self.assertEqual(self.buffer.cursors[self.cursor_owner], (0, 2))
+
+        self.buffer.insert(self.cursor_owner, u"o")
         self.assertEqual(self.buffer.cursors[self.cursor_owner], (0, 3))
 
         self.buffer.insert(self.cursor_owner, u"bar", u"baz", u"quux")
@@ -78,3 +81,38 @@ class TestBufferCursor(TestCase):
 
 class TestWindow(TestCase):
     pass
+
+
+class TestTab(TestCase):
+    def setUp(self):
+        self.windows = [[mock.Mock(), mock.Mock()], [mock.Mock(), mock.Mock()]]
+        self.tab = window.Tab(windows=self.windows)
+
+    def test_active_window(self):
+        self.assertEqual(self.tab.active_window, self.windows[0][0])
+
+    def test_forwards_editor_and_events(self):
+        self.tab.editor = mock.Mock()
+
+        self.assertEqual(
+            {window.editor for row in self.tab for window in row},
+            {self.tab.editor}
+        )
+        self.assertEqual(
+            {window.events for row in self.tab for window in row},
+            {self.tab.editor.events}
+        )
+
+    def test_iter_returns_rows(self):
+        first, second = list(self.tab)
+        self.assertEqual(first, self.windows[0])
+        self.assertEqual(second, self.windows[1])
+
+
+
+class TestEditor(TestCase):
+    def setUp(self):
+        self.editor = editor.Editor(config=mock.Mock(), tabs=[mock.Mock()])
+
+    def test_forwards_self_and_events_to_tabs(self):
+        self.assertEqual(self.editor.tabs[0].editor, self.editor)
