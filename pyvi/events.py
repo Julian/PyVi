@@ -2,6 +2,8 @@ import panglery
 
 
 CURSOR_MOVED = "cursor_moved"
+INSERT_CHAR_PRE = "insert_char_pre"
+INSERT_CHAR = "insert_char"
 
 
 EventHandler = panglery.Pangler
