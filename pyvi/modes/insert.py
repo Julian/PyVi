@@ -2,6 +2,11 @@ from pyvi import events
 
 
 def keypress(editor, key):
+    if key == "esc":
+        editor.mode = editor.normal_mode
+        editor.active_window.cursor.column -= 1
+        return
+
     editor.events.trigger(event=events.INSERT_CHAR_PRE, char=key)
 
     if key == u"tab":

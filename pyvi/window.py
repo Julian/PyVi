@@ -21,6 +21,10 @@ class Cursor(object):
     def __repr__(self):
         return repr(self.coords)
 
+    def __reversed__(self):
+        yield self.column
+        yield self.row
+
     @property
     def coords(self):
         return self._row, self._column

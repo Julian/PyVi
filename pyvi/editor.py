@@ -12,6 +12,7 @@ class Editor(object):
 
         self.events = events.EventHandler()
         self.config = config
+        self.count = None
         self.mode = mode
         self.normal_mode = normal_mode
 
@@ -27,7 +28,4 @@ class Editor(object):
         return self.active_tab.active_window
 
     def keypress(self, key):
-        if key == "esc":
-            self.mode = self.normal_mode
-        else:
-            self.mode.keypress(self, key)
+        self.mode.keypress(self, key)

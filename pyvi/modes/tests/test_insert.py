@@ -4,11 +4,21 @@ import mock
 
 from pyvi.editor import Editor
 from pyvi.modes import insert
+from pyvi.tests.util import MockCursor
 
 
 class TestInsertMode(TestCase):
     def setUp(self):
         self.editor = mock.Mock(spec=Editor())
+        self.cursor = self.editor.active_window.cursor = MockCursor(
+            row=0, column=1
+        )
+
+    def test_esc(self):
+        self.assertEqual(self.cursor.coords, (0, 1))
+        insert.keypress(self.editor, u"esc")
+        self.assertEqual(self.editor.mode, self.editor.normal_mode)
+        self.assertEqual(self.cursor.coords, (0, 0))
 
     def test_inserts_characters(self):
         insert.keypress(self.editor, u"f")
