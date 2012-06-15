@@ -1,4 +1,4 @@
-from pyvi import events
+from pyvi import events, window
 from pyvi.modes import normal
 
 
@@ -6,7 +6,7 @@ class Editor(object):
 
     active_tab = None
 
-    def __init__(self, tabs=(), config=None, mode=None, normal_mode=normal):
+    def __init__(self, tabs=None, config=None, mode=None, normal_mode=normal):
         if mode is None:
             mode = normal_mode
 
@@ -14,21 +14,17 @@ class Editor(object):
         self.config = config
         self.mode = mode
         self.normal_mode = normal_mode
-        self.tabs = []
 
-        for tab in tabs:
-            self.add_tab(tab)
+        if tabs is None:
+            tab = window.Tab(self)
+            tabs = [tab]
+            self.active_tab = tab
 
-        if self.tabs:
-            self.active_tab = self.tabs[0]
+        self.tabs = tabs
 
     @property
     def active_window(self):
         return self.active_tab.active_window
-
-    def add_tab(self, tab):
-        tab.editor = self
-        self.tabs.append(tab)
 
     def keypress(self, key):
         if key == "esc":

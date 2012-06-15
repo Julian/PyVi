@@ -2,15 +2,16 @@ from unittest import TestCase
 
 import mock
 
-from pyvi import editor, window
+from pyvi import editor, events, window
 from pyvi.modes import insert, normal
 
 
 class TestBufferWindowTabInteraction(TestCase):
     def setUp(self):
-        self.buffer = window.Buffer()
-        self.window = window.Window(self.buffer)
-        self.tab = window.Tab(windows=[[self.window]])
+        self.editor = editor.Editor()
+        self.tab = self.editor.active_tab
+        self.window = self.tab.active_window
+        self.buffer = self.window.buffer
 
     def test_initial_cursor_is_0_0(self):
         self.assertEqual(self.window.cursor, (0, 0))
@@ -27,8 +28,8 @@ class TestBufferWindowTabInteraction(TestCase):
 
     def test_multiple_window_insert(self):
         self.buffer.insert(self.window, u"foo", u"bar", u"baz", u"quux", u"")
-        another = window.Window(self.buffer, cursor=(2, 3))
-        and_another = window.Window(self.buffer, cursor=(0, 0))
+        another = window.Window(self.editor, self.buffer, cursor=(2, 3))
+        and_another = window.Window(self.editor, self.buffer, cursor=(0, 0))
 
         self.window.insert(u"spam")
         another.insert(u"", u"eggs")
@@ -44,8 +45,9 @@ class TestBufferWindowTabInteraction(TestCase):
 
 class TestEditorIntegration(TestCase):
     def setUp(self):
-        self.tabs = window.Tab(), window.Tab()
-        self.editor = editor.Editor(tabs=self.tabs)
+        self.editor = editor.Editor()
+        self.tabs = self.editor.tabs
+        self.tabs.append(window.Tab(self.editor))
 
     def test_insert_some_text_via_keypresses(self):
         self.assertEqual(self.editor.active_tab, self.tabs[0])
@@ -66,15 +68,12 @@ class TestEditorIntegration(TestCase):
 
 class TestEvents(TestCase):
     def setUp(self):
-        self.tab = window.Tab()
+        self.editor = editor.Editor()
+        self.tab = self.editor.active_tab
         self.window = self.tab.active_window
-        self.editor = editor.Editor(tabs=[self.tab])
 
     def test_cursor_moved(self):
         test = mock.Mock(return_value=None)
-        self.editor.events.subscribe(event="cursor_moved", needs=["window"])(
-            test
-        )
+        self.editor.events.subscribe(event=events.CURSOR_MOVED)(test)
         self.window.insert("foo")
-        self.assertTrue(test.called)
-        self.assertEqual(test.call_args[1], {"window" : self.window})
+        test.assert_called_once_with(mock.ANY)  # ANY = a pangler
