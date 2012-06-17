@@ -4,6 +4,16 @@ from string import digits
 from pyvi.modes import insert
 
 
+KEYMAP = {}
+
+
+def map_to(key):
+    def map(fn):
+        KEYMAP[key] = fn
+        return fn
+    return map
+
+
 def keypress(editor, key):
     if key == "esc":
         return
@@ -18,39 +28,37 @@ def keypress(editor, key):
 def motion(fn):
     @wraps(fn)
     def move(editor, *args, **kwargs):
-        cursor_position = fn(editor, count=editor.count or 1, *args, **kwargs)
+        cursor = editor.active_window.cursor
+        moved_to = fn(editor, count=editor.count or 1, *args, **kwargs)
         editor.count = None
-        editor.active_window.cursor.coords = cursor_position
+        cursor.coords = moved_to
+        cursor.trim()
     return move
 
 
+@map_to("h")
 @motion
 def h(editor, count):
     cursor = editor.active_window.cursor
     return cursor.row, cursor.column - count
 
 
+@map_to("j")
 @motion
 def j(editor, count):
     cursor = editor.active_window.cursor
     return cursor.row + count, cursor.column
 
 
+@map_to("k")
 @motion
 def k(editor, count):
     cursor = editor.active_window.cursor
     return cursor.row - count, cursor.column
 
 
+@map_to("l")
 @motion
 def l(editor, count):
     cursor = editor.active_window.cursor
     return cursor.row, cursor.column + count
-
-
-KEYMAP = {
-    "h" : h,
-    "j" : j,
-    "k" : k,
-    "l" : l,
-}

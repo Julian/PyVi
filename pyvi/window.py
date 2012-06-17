@@ -52,6 +52,12 @@ class Cursor(object):
         self._row = row
         self.trigger(event=events.CURSOR_MOVED)
 
+    def trim(self):
+        # XXX: Should this fire an event?
+        row, column, buffer = self._row, self._column, self.window.buffer
+        self._row = row = max(min(len(buffer) - 1, row), 0)
+        self._column = max(min(len(buffer[row]) - 1, column), 0)
+
 
 class Buffer(object):
     def __init__(self, iterable=(u"",)):
@@ -78,9 +84,13 @@ class Buffer(object):
     def __iter__(self):
         for line in self._lines:
             yield line
-        while not self.done_reading:
+        while True:
             self._read_further(how_many=1)
-            yield self[-1]
+
+            if not self.done_reading:
+                yield self[-1]
+            else:
+                return
 
     def __len__(self):
         self._read_further()
@@ -96,13 +106,15 @@ class Buffer(object):
             return
 
         if how_many is not None:
-            lines = (next(self._iter) for _ in xrange(how_many))
+            for _ in xrange(how_many):
+                try:
+                    self.append(next(self._iter))
+                except StopIteration:
+                    self.done_reading = True
+                    return
         else:
-            lines = self._iter
+            self._lines.extend(self._iter)
             self.done_reading = True
-
-        for line in lines:
-            self.append(line)
 
     def append(self, line):
         self._lines.append(line)
@@ -128,6 +140,9 @@ class Buffer(object):
                 other._row += added
 
         cursor.coords = row + added, column
+
+    def write(self, file):
+        file.writelines(line + "\n" for line in self)
 
 
 class Window(object):

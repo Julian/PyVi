@@ -1,3 +1,4 @@
+from StringIO import StringIO
 from unittest import TestCase
 
 import mock
@@ -11,6 +12,11 @@ class TestBuffer(TestCase):
         b = window.Buffer()
         self.assertEqual(len(b), 1)
         self.assertEqual(list(b), [u""])
+
+    def test_iter(self):
+        lines = [u"foo", u"bar", u"baz"]
+        b = window.Buffer(lines)
+        self.assertEqual(list(iter(b)), lines)
 
     def test_get_line_by_index(self):
         lines = [u"foo", u"bar", u"baz"]
@@ -45,6 +51,14 @@ class TestBuffer(TestCase):
         self.assertEqual(b[10], u"10")
         self.assertEqual(b.lines_read, 11)
 
+    def test_write(self):
+        s = StringIO()
+        b = window.Buffer(unicode(i) for i in xrange(10))
+        b.write(s)
+        self.assertEqual(
+            s.getvalue(), u"\n".join(map(unicode, xrange(10))) + u"\n"
+        )
+
 
 class TestBufferCursor(TestCase):
     def setUp(self):
@@ -76,7 +90,17 @@ class TestBufferCursor(TestCase):
 
 
 class TestWindow(TestCase):
-    pass
+    def setUp(self):
+        self.editor = mock.Mock()
+        self.buffer = mock.MagicMock()
+        self.window = window.Window(self.editor, self.buffer)
+
+    def test_cursor_trim(self):
+        self.buffer.__len__.return_value = 6
+        self.buffer[5].__len__.return_value = 4
+        self.window.cursor.coords = (8, 10)
+        self.window.cursor.trim()
+        self.assertEqual(self.window.cursor.coords, (5, 3))
 
 
 class TestTab(TestCase):
