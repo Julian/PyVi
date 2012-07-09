@@ -1,17 +1,11 @@
 from functools import wraps
 from string import digits
 
-from pyvi.modes import insert
+from pyvi.modes import key, insert
 
 
 KEYMAP = {}
-
-
-def map_to(key):
-    def map(fn):
-        KEYMAP[key] = fn
-        return fn
-    return map
+map_to = key.map(KEYMAP)
 
 
 def keypress(editor, key):
@@ -22,7 +16,10 @@ def keypress(editor, key):
     elif key == "i":
         editor.mode = insert
     else:
-        KEYMAP[key](editor)
+        fn = KEYMAP.get(key)
+
+        if fn is not None:
+            fn(editor)
 
 
 def motion(fn):
