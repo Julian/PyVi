@@ -1,14 +1,12 @@
 from pyvi import events
-from pyvi.modes import key
+from pyvi.modes.insert import insert
+from pyvi.mode import Mode
 
 
-KEYMAP = {}
-map_to = key.map(KEYMAP)
-
-
-def keypress(editor, key):
-    if key == "esc":
-        editor.mode = editor.normal_mode
-
-    editor.active_window.insert(key)
-    editor.events.trigger(event=events.INSERT_CHAR, char=key)
+class Cmdline(Mode):
+    def keypress(self, key):
+        if key == "esc":
+            # XXX: dismiss window
+            super(Cmdline, self).keypress(key)
+        else:
+            insert(self.editor, key)

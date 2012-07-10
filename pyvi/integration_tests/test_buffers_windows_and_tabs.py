@@ -3,7 +3,8 @@ from unittest import TestCase
 import mock
 
 from pyvi import editor, events, window
-from pyvi.modes import insert, normal
+from pyvi.modes.insert import Insert
+from pyvi.modes.normal import Normal
 
 
 class TestBufferWindowTabInteraction(TestCase):
@@ -51,10 +52,10 @@ class TestEditorIntegration(TestCase):
 
     def test_insert_some_text_via_keypresses(self):
         self.assertEqual(self.editor.active_tab, self.tabs[0])
-        self.assertEqual(self.editor.mode, normal)
+        self.assertIsInstance(self.editor.mode, Normal)
 
         self.editor.keypress("i")
-        self.assertEqual(self.editor.mode, insert)
+        self.assertIsInstance(self.editor.mode, Insert)
 
         for key in u"foo":
             self.editor.keypress(key)
@@ -63,7 +64,7 @@ class TestEditorIntegration(TestCase):
         self.assertEqual(self.editor.active_window.cursor, (0, 3))
 
         self.editor.keypress("esc")
-        self.assertEqual(self.editor.mode, normal)
+        self.assertIsInstance(self.editor.mode, Normal)
 
 
 class TestEvents(TestCase):

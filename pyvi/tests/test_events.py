@@ -9,7 +9,7 @@ from pyvi.modes import insert
 class TestEvents(TestCase):
     def test_insert_event(self):
         m = mock.Mock()
-        insert.keypress(m, "i")
+        insert.insert(m, "i")
 
         self.assertEqual(
             m.events.trigger.call_args_list,

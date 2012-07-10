@@ -3,7 +3,8 @@ from unittest import TestCase
 import mock
 
 from pyvi.editor import Editor
-from pyvi.modes import insert, normal
+from pyvi.modes import normal
+from pyvi.modes.insert import Insert
 from pyvi.tests.util import MockCursor
 
 
@@ -12,9 +13,10 @@ class TestNormalMode(TestCase):
         self.editor = mock.Mock(spec=Editor(), count=None)
         self.window = self.editor.active_window
         self.cursor = self.window.cursor = MockCursor(row=1, column=1)
+        self.mode = normal.Normal(self.editor)
 
     def keypress(self, key):
-        normal.keypress(self.editor, key)
+        self.mode.keypress(key)
 
     def test_count(self):
         self.keypress("2")
@@ -37,7 +39,7 @@ class TestNormalMode(TestCase):
 
     def test_i(self):
         self.keypress("i")
-        self.assertEqual(self.editor.mode, insert)
+        self.assertIsInstance(self.editor.mode, Insert)
 
     def test_j(self):
         self.keypress("j")

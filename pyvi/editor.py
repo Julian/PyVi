@@ -1,20 +1,20 @@
 from pyvi import events, window
-from pyvi.modes import normal
+from pyvi.modes.normal import Normal
 
 
 class Editor(object):
 
     active_tab = None
 
-    def __init__(self, tabs=None, config=None, mode=None, normal_mode=normal):
+    def __init__(self, tabs=None, config=None, mode=None, Normal=Normal):
         if mode is None:
-            mode = normal_mode
+            mode = Normal(self)
 
+        self.Normal = Normal
         self.events = events.EventHandler()
         self.config = config
         self.count = None
         self.mode = mode
-        self.normal_mode = normal_mode
 
         if tabs is None:
             tab = window.Tab(self)
@@ -28,4 +28,4 @@ class Editor(object):
         return self.active_tab.active_window
 
     def keypress(self, key):
-        self.mode.keypress(self, key)
+        self.mode.keypress(key)
