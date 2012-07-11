@@ -2,21 +2,18 @@ from unittest import TestCase
 
 import mock
 
-from pyvi.editor import Editor
-from pyvi.modes import normal
 from pyvi.modes.insert import Insert
-from pyvi.tests.util import MockCursor
+from pyvi.modes.normal import Normal
+from pyvi.tests.util import MockCursor, ModeTest
 
 
-class TestNormalMode(TestCase):
+class TestNormalMode(ModeTest):
+
+    Mode = Normal
+
     def setUp(self):
-        self.editor = mock.Mock(spec=Editor(), count=None)
-        self.window = self.editor.active_window
-        self.cursor = self.window.cursor = MockCursor(row=1, column=1)
-        self.mode = normal.Normal(self.editor)
-
-    def keypress(self, key):
-        self.mode.keypress(key)
+        super(TestNormalMode, self).setUp()
+        self.cursor.coords = (1, 1)
 
     def test_count(self):
         self.keypress("2")
@@ -28,14 +25,10 @@ class TestNormalMode(TestCase):
 
     def test_h(self):
         self.keypress("h")
-        self.assertEqual(self.editor.active_window.cursor.row, 1)
-        self.assertEqual(self.editor.active_window.cursor.column, 0)
+        self.assertEqual(self.cursor.coords, (1, 0))
 
-        self.keypress("1")
-        self.keypress("2")
-        self.keypress("h")
-        self.assertEqual(self.editor.active_window.cursor.row, 1)
-        self.assertEqual(self.editor.active_window.cursor.column, -12)
+        self.keypress("1", "2", "h")
+        self.assertEqual(self.cursor.coords, (1, -12))
 
     def test_i(self):
         self.keypress("i")
@@ -43,33 +36,21 @@ class TestNormalMode(TestCase):
 
     def test_j(self):
         self.keypress("j")
-        self.assertEqual(self.editor.active_window.cursor.row, 2)
-        self.assertEqual(self.editor.active_window.cursor.column, 1)
+        self.assertEqual(self.cursor.coords, (2, 1))
 
-        self.keypress("2")
-        self.keypress("2")
-        self.keypress("j")
-        self.assertEqual(self.editor.active_window.cursor.row, 24)
-        self.assertEqual(self.editor.active_window.cursor.column, 1)
+        self.keypress("2", "2", "j")
+        self.assertEqual(self.cursor.coords, (24, 1))
 
     def test_k(self):
         self.keypress("k")
-        self.assertEqual(self.editor.active_window.cursor.row, 0)
-        self.assertEqual(self.editor.active_window.cursor.column, 1)
+        self.assertEqual(self.cursor.coords, (0, 1))
 
-        self.keypress("1")
-        self.keypress("7")
-        self.keypress("k")
-        self.assertEqual(self.editor.active_window.cursor.row, -17)
-        self.assertEqual(self.editor.active_window.cursor.column, 1)
+        self.keypress("1", "7", "k")
+        self.assertEqual(self.cursor.coords, (-17, 1))
 
     def test_l(self):
         self.keypress("l")
-        self.assertEqual(self.editor.active_window.cursor.row, 1)
-        self.assertEqual(self.editor.active_window.cursor.column, 2)
+        self.assertEqual(self.cursor.coords, (1, 2))
 
-        self.keypress("1")
-        self.keypress("7")
-        self.keypress("l")
-        self.assertEqual(self.editor.active_window.cursor.row, 1)
-        self.assertEqual(self.editor.active_window.cursor.column, 19)
+        self.keypress("1", "7", "l")
+        self.assertEqual(self.cursor.coords, (1, 19))

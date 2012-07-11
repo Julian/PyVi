@@ -18,6 +18,13 @@ def motion(fn):
     return move
 
 
+def operator(fn):
+    @wraps(fn)
+    def operate(self, *args, **kwargs):
+        return
+    return operate
+
+
 class Normal(Mode):
     def keypress(self, key):
         if key == "esc":
@@ -29,25 +36,25 @@ class Normal(Mode):
 
     @motion
     def keypress_h(self):
-        cursor = self.editor.active_window.cursor
-        return cursor.row, cursor.column - self.editor.count
+        row, column = self.editor.active_window.cursor
+        return row, column - self.editor.count
 
     def keypress_i(self):
         self.editor.mode = insert.Insert(self.editor)
 
     @motion
     def keypress_j(self):
-        cursor = self.editor.active_window.cursor
-        return cursor.row + self.editor.count, cursor.column
+        row, column = self.editor.active_window.cursor
+        return row + self.editor.count, column
 
 
     @motion
     def keypress_k(self):
-        cursor = self.editor.active_window.cursor
-        return cursor.row - self.editor.count, cursor.column
+        row, column = self.editor.active_window.cursor
+        return row - self.editor.count, column
 
 
     @motion
     def keypress_l(self):
-        cursor = self.editor.active_window.cursor
-        return cursor.row, cursor.column + self.editor.count
+        row, column = self.editor.active_window.cursor
+        return row, column + self.editor.count
