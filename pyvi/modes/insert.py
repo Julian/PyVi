@@ -3,6 +3,9 @@ from pyvi.mode import Mode
 
 
 class Insert(Mode):
+
+    name = "insert"
+
     def keypress(self, key):
         if key == "esc":
             self.editor.mode = self.editor.Normal(self.editor)

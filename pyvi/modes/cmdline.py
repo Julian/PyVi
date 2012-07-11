@@ -4,6 +4,9 @@ from pyvi.mode import Mode
 
 
 class Cmdline(Mode):
+
+    name = "cmdline"
+
     def keypress(self, key):
         if key == "esc":
             # XXX: dismiss window

@@ -26,6 +26,9 @@ def operator(fn):
 
 
 class Normal(Mode):
+
+    name = "normal"
+
     def keypress(self, key):
         if key == "esc":
             return

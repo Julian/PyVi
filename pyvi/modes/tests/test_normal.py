@@ -32,7 +32,7 @@ class TestNormalMode(ModeTest):
 
     def test_i(self):
         self.keypress("i")
-        self.assertIsInstance(self.editor.mode, Insert)
+        self.assertEqual(self.editor.mode.name, "insert")
 
     def test_j(self):
         self.keypress("j")
