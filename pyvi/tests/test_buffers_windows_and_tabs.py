@@ -123,3 +123,23 @@ class TestTab(TestCase):
 class TestEditor(TestCase):
     def setUp(self):
         self.editor = editor.Editor(config=mock.Mock(), tabs=[mock.Mock()])
+
+    def test_handle_next_key(self):
+        m = mock.Mock()
+        self.editor.keypress("z")
+        self.editor.next_keyhandler = m
+        self.editor.keypress("z")
+        m.assert_called_once_with("z")
+
+    def test_handle_next_key_reset(self):
+        def handle(key):
+            if key == "r":
+                self.editor.next_keyhandler = handle
+
+        self.editor.next_keyhandler = handle
+        self.editor.keypress("z")
+        self.assertNotEqual(self.editor.next_keyhandler, handle)
+
+        self.editor.next_keyhandler = handle
+        self.editor.keypress("r")
+        self.assertEqual(self.editor.next_keyhandler, handle)
