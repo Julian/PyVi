@@ -23,11 +23,11 @@ class MockCursor(mock.Mock):
 
 class ModeTest(unittest.TestCase):
     def setUp(self):
-        self.editor = mock.Mock(spec=Editor(), count=None)
+        self.editor = mock.Mock(spec=Editor(), count=None, _command=None)
         self.window = self.editor.active_window
         self.cursor = self.window.cursor = MockCursor()
         self.mode = self.Mode(self.editor)
 
-    def keypress(self, *keys):
+    def keypress(self, keys):
         for key in keys:
             self.mode.keypress(key)

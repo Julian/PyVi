@@ -13,6 +13,7 @@ class Editor(object):
 
         self.Normal = Normal
         self.events = events.EventHandler()
+        self._command = None
         self.config = config
         self.count = None
         self.mode = mode

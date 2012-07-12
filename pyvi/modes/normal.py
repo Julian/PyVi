@@ -7,21 +7,26 @@ from pyvi.mode import Mode
 
 def motion(fn):
     @wraps(fn)
-    def move(self, *args, **kwargs):
+    def move(self):
         cursor = self.editor.active_window.cursor
-        self.editor.count = self.editor.count or 1
-        moved_to = fn(self, *args, **kwargs)
+        moved_to = fn(self, count=self.editor.count or 1)
         # XXX: do this on any executed command
         self.editor.count = None
-        cursor.coords = moved_to
-        cursor.trim()
+
+        command = self.editor._command
+        if command is not None:
+            command(self, motion=moved_to)
+            self.editor._command = None
+        else:
+            cursor.coords = moved_to
+            cursor.trim()
     return move
 
 
 def operator(fn):
     @wraps(fn)
-    def operate(self, *args, **kwargs):
-        return
+    def operate(self):
+        self.editor._command = fn
     return operate
 
 
@@ -37,27 +42,31 @@ class Normal(Mode):
         else:
             super(Normal, self).keypress(key)
 
+    @operator
+    def keypress_d(self, motion):
+        self.editor.active_window.delete(end=motion)
+
     @motion
-    def keypress_h(self):
+    def keypress_h(self, count):
         row, column = self.editor.active_window.cursor
-        return row, column - self.editor.count
+        return row, column - count
 
     def keypress_i(self):
         self.editor.mode = insert.Insert(self.editor)
 
     @motion
-    def keypress_j(self):
+    def keypress_j(self, count):
         row, column = self.editor.active_window.cursor
-        return row + self.editor.count, column
+        return row + count, column
 
 
     @motion
-    def keypress_k(self):
+    def keypress_k(self, count):
         row, column = self.editor.active_window.cursor
-        return row - self.editor.count, column
+        return row - count, column
 
 
     @motion
-    def keypress_l(self):
+    def keypress_l(self, count):
         row, column = self.editor.active_window.cursor
-        return row, column + self.editor.count
+        return row, column + count

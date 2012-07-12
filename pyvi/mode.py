@@ -15,4 +15,4 @@ class Mode(object):
                 handler()
 
     def __repr__(self):
-        return "<Mode: %s>" % (self.mode.title(),)
+        return "<Mode: %s>" % (self.name.title(),)

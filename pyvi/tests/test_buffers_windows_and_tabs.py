@@ -59,6 +59,25 @@ class TestBuffer(TestCase):
             s.getvalue(), u"\n".join(map(unicode, xrange(10))) + u"\n"
         )
 
+    def test_chars(self):
+        lines = [u"foo", u"bar", u"baz"]
+        b = window.Buffer(lines)
+
+        self.assertEqual(list(b.chars()), list("".join(lines)))
+
+        chars = b.chars(start=(0, 2), end=(2, 1))
+        self.assertEqual(list(chars), list("obarb"))
+
+    def test_delete(self):
+        lines = [u"foo", u"bar", u"baz"]
+        b = window.Buffer(lines)
+
+        b.delete(start=(1, 1))
+        self.assertEqual(list(b.chars()), list("foob"))
+
+        b.delete(start=(0, 1), end=(1, 0))
+        self.assertEqual(list(b.chars()), ["f", "b"])
+
 
 class TestBufferCursor(TestCase):
     def setUp(self):

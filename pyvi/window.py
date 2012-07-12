@@ -1,3 +1,5 @@
+import itertools
+
 from pyvi import events
 
 
@@ -119,6 +121,30 @@ class Buffer(object):
     def append(self, line):
         self._lines.append(line)
 
+    def chars(self, start=(0, 0), end=None):
+        if end is None:
+            end = (len(self) - 1, len(self[-1]))
+
+        first_row, first_col = start
+        last_row, last_col = end
+
+        first = self[first_row][first_col:]
+        middle = itertools.chain.from_iterable(self[first_row + 1:last_row])
+        last = self[last_row][:last_col]
+
+        return itertools.chain(first, middle, last)
+
+    def delete(self, start=(0, 0), end=None):
+        if end is None:
+            end = (len(self) - 1, len(self[-1]))
+
+        first_row, first_col = start
+        last_row, last_col = end
+
+        self[first_row] = self[first_row][:first_col]
+        self[last_row] = self[last_row][last_col:]
+        self[first_row + 1:last_row] = []
+
     def insert(self, window, first_line, *lines):
         row, column = cursor = self.cursors[window]
         left, right = self[row][:column], self[row][column:]
@@ -156,6 +182,10 @@ class Window(object):
 
     def insert(self, *lines):
         self.buffer.insert(self, *lines)
+
+    @property
+    def delete(self):
+        return self.buffer.delete
 
 
 class Tab(object):
