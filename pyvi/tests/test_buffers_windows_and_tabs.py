@@ -78,6 +78,15 @@ class TestBuffer(TestCase):
         b.delete(start=(0, 1), end=(1, 0))
         self.assertEqual(list(b.chars()), ["f", "b"])
 
+    def test_chars_on_single_line(self):
+        b = window.Buffer(["foooobar"])
+        self.assertEqual(list(b.chars(start=(0, 3), end=(0, 6))), list("oob"))
+
+    def test_delete_on_single_line(self):
+        b = window.Buffer(["foooobar"])
+        b.delete(start=(0, 3), end=(0, 6))
+        self.assertEqual(b[0], "fooar")
+
 
 class TestBufferCursor(TestCase):
     def setUp(self):
@@ -113,6 +122,7 @@ class TestWindow(TestCase):
         self.editor = mock.Mock()
         self.buffer = mock.MagicMock()
         self.window = window.Window(self.editor, self.buffer)
+        self.cursor = self.window.cursor
 
     def test_cursor_trim(self):
         self.buffer.__len__.return_value = 6
@@ -120,6 +130,14 @@ class TestWindow(TestCase):
         self.window.cursor.coords = (8, 10)
         self.window.cursor.trim()
         self.assertEqual(self.window.cursor.coords, (5, 3))
+
+    def test_chars(self):
+        self.window.chars()
+        self.buffer.chars.assert_called_once_with(start=self.cursor.coords)
+
+    def test_delete(self):
+        self.window.delete()
+        self.buffer.delete.assert_called_once_with(start=self.cursor.coords)
 
 
 class TestTab(TestCase):

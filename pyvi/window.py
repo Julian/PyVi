@@ -128,6 +128,10 @@ class Buffer(object):
         first_row, first_col = start
         last_row, last_col = end
 
+        # XXX
+        if first_row == last_row:
+            return self[first_row][first_col:last_col]
+
         first = self[first_row][first_col:]
         middle = itertools.chain.from_iterable(self[first_row + 1:last_row])
         last = self[last_row][:last_col]
@@ -141,9 +145,14 @@ class Buffer(object):
         first_row, first_col = start
         last_row, last_col = end
 
-        self[first_row] = self[first_row][:first_col]
-        self[last_row] = self[last_row][last_col:]
-        self[first_row + 1:last_row] = []
+        # XXX
+        if first_row == last_row:
+            row = self[first_row]
+            self[first_row] = row[:first_col] + row[last_col:]
+        else:
+            self[first_row] = self[first_row][:first_col]
+            self[last_row] = self[last_row][last_col:]
+            self[first_row + 1:last_row] = []
 
     def insert(self, window, first_line, *lines):
         row, column = cursor = self.cursors[window]
@@ -183,9 +192,15 @@ class Window(object):
     def insert(self, *lines):
         self.buffer.insert(self, *lines)
 
-    @property
-    def delete(self):
-        return self.buffer.delete
+    def chars(self, start=None, *args, **kwargs):
+        if start is None:
+            start = self.cursor.coords
+        return self.buffer.chars(start=start, *args, **kwargs)
+
+    def delete(self, start=None, *args, **kwargs):
+        if start is None:
+            start = self.cursor.coords
+        return self.buffer.delete(start=start, *args, **kwargs)
 
 
 class Tab(object):
