@@ -3,47 +3,81 @@ import itertools
 from pyvi import events
 
 
-class Buffer(object):
-    def __init__(self, iterable=(u"",)):
-        self._iter = iter(iterable)
+class _Linewise(object):
+    def __init__(self, buffer):
+        self.buffer = buffer
         self._lines = []
-        self.done_reading = False
-        self.cursors = {}
+
+    def __eq__(self, other):
+        z = itertools.izip_longest(self, other)
+        return all(line == other_line for line, other_line in z)
+
+    def __ne__(self, other):
+        return not self == other
 
     def __getitem__(self, i):
         if isinstance(i, slice):
-            self._read_further(how_many=i.stop - self.lines_read)
+            self.buffer._read_further(how_many=i.stop - self.lines_read)
         else:
-            self._read_further(how_many=i - self.lines_read + 1)
+            self.buffer._read_further(how_many=i - self.lines_read + 1)
         return self._lines[i]
-
 
     def __setitem__(self, i, value):
         if isinstance(i, slice):
-            self._read_further(how_many=i.stop - self.lines_read)
+            self.buffer._read_further(how_many=i.stop - self.lines_read)
         else:
-            self._read_further(how_many=i - self.lines_read + 1)
+            self.buffer._read_further(how_many=i - self.lines_read + 1)
         self._lines[i] = value
 
     def __iter__(self):
         for line in self._lines:
             yield line
         while True:
-            self._read_further(how_many=1)
+            self.buffer._read_further(how_many=1)
 
-            if not self.done_reading:
+            if not self.buffer.done_reading:
                 yield self[-1]
             else:
                 return
 
     def __len__(self):
-        self._read_further()
+        self.buffer._read_further()
         return self.lines_read
 
     @property
     def lines_read(self):
         return len(self._lines)
 
+    def append(self, line):
+        self._lines.append(line)
+
+    def extend(self, lines):
+        self._lines.extend(lines)
+
+
+class Buffer(object):
+    def __init__(self, iterable=(u"",)):
+        # XXX: done_reading -> iter
+        self._iter = iter(iterable)
+        self.lines = _Linewise(self)
+        self.done_reading = False
+        self.cursors = {}
+
+    def __getitem__(self, i):
+        return self.lines[i]
+
+    def __setitem__(self, i, value):
+        self.lines[i] = value
+
+    def __iter__(self):
+        return iter(self.lines)
+
+    def __len__(self):
+        return len(self.lines)
+
+    @property
+    def lines_read(self):
+        return self.lines.lines_read
 
     def _read_further(self, how_many=None):
         if self.done_reading:
@@ -52,16 +86,13 @@ class Buffer(object):
         if how_many is not None:
             for _ in xrange(how_many):
                 try:
-                    self.append(next(self._iter))
+                    self.lines.append(next(self._iter))
                 except StopIteration:
                     self.done_reading = True
                     return
         else:
-            self._lines.extend(self._iter)
+            self.lines.extend(self._iter)
             self.done_reading = True
-
-    def append(self, line):
-        self._lines.append(line)
 
     def chars(self, start=(0, 0), end=None):
         if end is None:

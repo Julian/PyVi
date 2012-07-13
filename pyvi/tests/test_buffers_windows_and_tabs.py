@@ -18,39 +18,6 @@ class TestBuffer(TestCase):
         b = window.Buffer(lines)
         self.assertEqual(list(iter(b)), lines)
 
-    def test_get_line_by_index(self):
-        lines = [u"foo", u"bar", u"baz"]
-        b = window.Buffer(lines)
-        self.assertEqual(b[0], lines[0])
-
-    def test_no_such_line_raises_IndexError(self):
-        with self.assertRaises(IndexError):
-            window.Buffer()[5]
-
-        with self.assertRaises(IndexError):
-            window.Buffer()[5] = "bar"
-
-    def test_set_line_by_index(self):
-        lines = [u"foo", u"bar", u"baz"]
-        b = window.Buffer(lines)
-
-        b[1] = lines[1] = u"quux"
-        self.assertEqual(list(b), lines)
-
-    def test_set_slice(self):
-        b = window.Buffer()
-        b[:3] = lines = [u"foo", u"bar", u"baz"]
-        self.assertEqual(list(b), lines)
-
-    def test_seeks_forward_for_unread_lines(self):
-        b = window.Buffer((unicode(i) for i in xrange(100)))
-        self.assertEqual(b.lines_read, 0)
-        self.assertEqual(b[:10], [unicode(i) for i in xrange(10)])
-
-        self.assertEqual(b.lines_read, 10)
-        self.assertEqual(b[10], u"10")
-        self.assertEqual(b.lines_read, 11)
-
     def test_write(self):
         s = StringIO()
         b = window.Buffer(unicode(i) for i in xrange(10))
@@ -86,6 +53,74 @@ class TestBuffer(TestCase):
         b = window.Buffer(["foooobar"])
         b.delete(start=(0, 3), end=(0, 6))
         self.assertEqual(b[0], "fooar")
+
+
+class TestBufferLinewise(TestCase):
+    def setUp(self):
+        self.lines = [u"foo", u"bar", u"baz", u"quux", u"spam", u"eggs"]
+        self.buffer = window.Buffer(self.lines)
+
+    def test_equal_to_list_like_stuff(self):
+        self.assertEqual(self.buffer.lines, self.lines)
+        self.assertNotEqual(self.buffer.lines, [])
+
+    def test_iterate_over_lines(self):
+        self.assertEqual(list(self.buffer.lines), self.lines)
+
+    def test_get_line_by_index(self):
+        self.assertEqual(self.buffer.lines[0], self.lines[0])
+
+    def test_no_such_line_raises_IndexError(self):
+        with self.assertRaises(IndexError):
+            self.buffer.lines[1000]
+
+        with self.assertRaises(IndexError):
+            self.buffer.lines[1000] = u"foo"
+
+    def test_set_line_by_index(self):
+        self.buffer.lines[1] = self.lines[1] = u"monty"
+        self.assertEqual(self.buffer.lines, self.lines)
+
+    def test_set_slice(self):
+        b = window.Buffer()
+        b[:3] = lines = [u"foo", u"bar", u"baz"]
+        self.assertEqual(list(b), lines)
+
+    def test_seeks_forward_for_unread_lines(self):
+        b = window.Buffer((unicode(i) for i in xrange(100)))
+        self.assertEqual(b.lines_read, 0)
+        self.assertEqual(b[:10], [unicode(i) for i in xrange(10)])
+
+        self.assertEqual(b.lines_read, 10)
+        self.assertEqual(b[10], u"10")
+        self.assertEqual(b.lines_read, 11)
+
+
+class TestBufferDelegatesToLines(TestCase):
+    def setUp(self):
+        self.buffer = window.Buffer()
+        self.buffer.lines = self.m = mock.MagicMock()
+
+    def test_get_line(self):
+        self.buffer[2]
+        self.m.__getitem__.assert_called_once_with(2)
+
+    def test_set_line(self):
+        self.buffer[2] = u"foo"
+        self.m.__setitem__.assert_called_once_with(2, u"foo")
+
+    def test_iter(self):
+        iter(self.buffer)
+        self.m.__iter__.assert_called_once_with()
+
+    def test_len(self):
+        len(self.buffer)
+        self.m.__len__.assert_called_once_with()
+
+    def test_lines_read(self):
+        # This is a property, but who cares, we can call it
+        self.buffer.lines_read()
+        self.m.lines_read.assert_called_once_with()
 
 
 class TestBufferCursor(TestCase):
