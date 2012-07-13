@@ -3,64 +3,6 @@ import itertools
 from pyvi import events
 
 
-class Cursor(object):
-    def __init__(self, window, coords=(0, 0)):
-        self._row, self._column = coords
-        self.trigger = window.editor.events.trigger
-        self.window = window
-        window.buffer.cursors[window] = self
-
-    def __eq__(self, other):
-        return self.coords == other
-
-    def __iter__(self):
-        yield self.row
-        yield self.column
-
-    def __ne__(self, other):
-        return self.coords != other
-
-    def __repr__(self):
-        return repr(self.coords)
-
-    def __reversed__(self):
-        yield self.column
-        yield self.row
-
-    @property
-    def coords(self):
-        return self._row, self._column
-
-    @coords.setter
-    def coords(self, coords):
-        self._row, self._column = coords
-        self.trigger(event=events.CURSOR_MOVED)
-
-    @property
-    def column(self):
-        return self._column
-
-    @column.setter
-    def column(self, column):
-        self._column = column
-        self.trigger(event=events.CURSOR_MOVED)
-
-    @property
-    def row(self):
-        return self._row
-
-    @row.setter
-    def row(self, row):
-        self._row = row
-        self.trigger(event=events.CURSOR_MOVED)
-
-    def trim(self):
-        # XXX: Should this fire an event?
-        row, column, buffer = self._row, self._column, self.window.buffer
-        self._row = row = max(min(len(buffer) - 1, row), 0)
-        self._column = max(min(len(buffer[row]) - 1, column), 0)
-
-
 class Buffer(object):
     def __init__(self, iterable=(u"",)):
         self._iter = iter(iterable)
@@ -178,6 +120,64 @@ class Buffer(object):
 
     def write(self, file):
         file.writelines(line + "\n" for line in self)
+
+
+class Cursor(object):
+    def __init__(self, window, coords=(0, 0)):
+        self._row, self._column = coords
+        self.trigger = window.editor.events.trigger
+        self.window = window
+        window.buffer.cursors[window] = self
+
+    def __eq__(self, other):
+        return self.coords == other
+
+    def __iter__(self):
+        yield self.row
+        yield self.column
+
+    def __ne__(self, other):
+        return self.coords != other
+
+    def __repr__(self):
+        return repr(self.coords)
+
+    def __reversed__(self):
+        yield self.column
+        yield self.row
+
+    @property
+    def coords(self):
+        return self._row, self._column
+
+    @coords.setter
+    def coords(self, coords):
+        self._row, self._column = coords
+        self.trigger(event=events.CURSOR_MOVED)
+
+    @property
+    def column(self):
+        return self._column
+
+    @column.setter
+    def column(self, column):
+        self._column = column
+        self.trigger(event=events.CURSOR_MOVED)
+
+    @property
+    def row(self):
+        return self._row
+
+    @row.setter
+    def row(self, row):
+        self._row = row
+        self.trigger(event=events.CURSOR_MOVED)
+
+    def trim(self):
+        # XXX: Should this fire an event?
+        row, column, buffer = self._row, self._column, self.window.buffer
+        self._row = row = max(min(len(buffer) - 1, row), 0)
+        self._column = max(min(len(buffer[row]) - 1, column), 0)
 
 
 class Window(object):
