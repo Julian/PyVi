@@ -16,17 +16,25 @@ class _Linewise(object):
         return not self == other
 
     def __getitem__(self, i):
-        if isinstance(i, slice):
-            self.buffer._read_further(how_many=i.stop - self.lines_read)
+        if not isinstance(i, slice):
+            how_many = i - self.lines_read + 1
+        elif i.stop is not None:
+            how_many = i.stop - self.lines_read
         else:
-            self.buffer._read_further(how_many=i - self.lines_read + 1)
+            how_many = None
+
+        self.buffer._read_further(how_many=how_many)
         return self._lines[i]
 
     def __setitem__(self, i, value):
-        if isinstance(i, slice):
-            self.buffer._read_further(how_many=i.stop - self.lines_read)
+        if not isinstance(i, slice):
+            how_many = i - self.lines_read + 1
+        elif i.stop is not None:
+            how_many = i.stop - self.lines_read
         else:
-            self.buffer._read_further(how_many=i - self.lines_read + 1)
+            how_many = None
+
+        self.buffer._read_further(how_many=how_many)
         self._lines[i] = value
 
     def __iter__(self):
@@ -55,11 +63,39 @@ class _Linewise(object):
         self._lines.extend(lines)
 
 
+class _Charwise(object):
+    def __init__(self, buffer):
+        self.buffer = buffer
+        self.lines = self.buffer.lines
+
+    def __eq__(self, other):
+        z = itertools.izip_longest(self, other)
+        return all(c == other_c for c, other_c in z)
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __iter__(self):
+        for i, line in enumerate(self.lines):
+            if i > 0:
+                yield "\n"
+            for c in line:
+                yield c
+
+    def __len__(self):
+        # +1 for \n for each new line, -1 for lack of \n after the last line
+        return sum(len(line) + 1 for line in self.lines) - 1
+
+    def __str__(self):
+        return "".join(self)
+
+
 class Buffer(object):
     def __init__(self, iterable=(u"",)):
         # XXX: done_reading -> iter
         self._iter = iter(iterable)
         self.lines = _Linewise(self)
+        self.chars = _Charwise(self)
         self.done_reading = False
         self.cursors = {}
 

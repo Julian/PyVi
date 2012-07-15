@@ -28,8 +28,7 @@ class TestNormalMode(TestCase):
 
             @normal.operator
             def keypress_o(self, motion):
-                text = self.buffer.chars(start=self.cursor, end=motion)
-                self.test_case.text = "".join(text)
+                self.buffer.lines.append(str(motion))
 
         m = self.editor.mode = MyCoolMode(self.editor)
 
@@ -43,7 +42,7 @@ class TestNormalMode(TestCase):
 
         self.editor.count = 1
         self.keypress("om")
-        self.assertEqual(self.text, "oobarb")
+        self.assertEqual(self.window.buffer.lines[-1], "(2, 1)")
 
     def test_trimmed(self):
         self.assertEqual(self.cursor.coords, (5, 4))

@@ -44,7 +44,17 @@ class Normal(Mode):
 
     @operator
     def keypress_d(self, motion):
-        self.editor.active_window.delete(end=motion)
+        buffer = self.editor.active_window.buffer
+        row, column = self.editor.active_window.cursor
+        end_row, end_column = motion
+
+        if row == end_row:
+            line = buffer.lines[row]
+            buffer.lines[row] = line[:column] + line[end_column:]
+        else:
+            buffer.lines[row] = buffer.lines[row][:column]
+            buffer.lines[row + 1:end_row] = []
+            buffer.lines[end_row] = buffer.lines[row][end_column:]
 
     @motion
     def keypress_h(self, count):

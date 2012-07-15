@@ -26,34 +26,6 @@ class TestBuffer(TestCase):
             s.getvalue(), u"\n".join(map(unicode, xrange(10))) + u"\n"
         )
 
-    def test_chars(self):
-        lines = [u"foo", u"bar", u"baz"]
-        b = window.Buffer(lines)
-
-        self.assertEqual(list(b.chars()), list("".join(lines)))
-
-        chars = b.chars(start=(0, 2), end=(2, 1))
-        self.assertEqual(list(chars), list("obarb"))
-
-    def test_delete(self):
-        lines = [u"foo", u"bar", u"baz"]
-        b = window.Buffer(lines)
-
-        b.delete(start=(1, 1))
-        self.assertEqual(list(b.chars()), list("foob"))
-
-        b.delete(start=(0, 1), end=(1, 0))
-        self.assertEqual(list(b.chars()), ["f", "b"])
-
-    def test_chars_on_single_line(self):
-        b = window.Buffer(["foooobar"])
-        self.assertEqual(list(b.chars(start=(0, 3), end=(0, 6))), list("oob"))
-
-    def test_delete_on_single_line(self):
-        b = window.Buffer(["foooobar"])
-        b.delete(start=(0, 3), end=(0, 6))
-        self.assertEqual(b[0], "fooar")
-
 
 class TestBufferLinewise(TestCase):
     def setUp(self):
@@ -70,6 +42,13 @@ class TestBufferLinewise(TestCase):
     def test_get_line_by_index(self):
         self.assertEqual(self.buffer.lines[0], self.lines[0])
 
+    # XXX: Slice step
+    def test_get_slice(self):
+        self.assertEqual(self.buffer.lines[1:5], self.lines[1:5])
+
+    def test_get_open_slice(self):
+        self.assertEqual(self.buffer.lines[1:], self.lines[1:])
+
     def test_no_such_line_raises_IndexError(self):
         with self.assertRaises(IndexError):
             self.buffer.lines[1000]
@@ -82,10 +61,11 @@ class TestBufferLinewise(TestCase):
         self.assertEqual(self.buffer.lines, self.lines)
 
     def test_set_slice(self):
-        b = window.Buffer()
-        b[:3] = lines = [u"foo", u"bar", u"baz"]
-        self.assertEqual(list(b), lines)
+        self.buffer.lines[:3] = self.lines[:3] = [u"oof", u"rab", u"zab"]
+        self.assertEqual(self.buffer.lines, self.lines)
 
+
+class TestBufferSeek(TestCase):
     def test_seeks_forward_for_unread_lines(self):
         b = window.Buffer((unicode(i) for i in xrange(100)))
         self.assertEqual(b.lines_read, 0)
@@ -94,6 +74,40 @@ class TestBufferLinewise(TestCase):
         self.assertEqual(b.lines_read, 10)
         self.assertEqual(b[10], u"10")
         self.assertEqual(b.lines_read, 11)
+
+
+class TestBufferCharwise(TestCase):
+    def setUp(self):
+        self.lines = [u"foo", u"bar", u"baz", u"quux", u"spam", u"eggs"]
+        self.chars = "\n".join(self.lines)
+        self.buffer = window.Buffer(self.lines)
+
+    def test_equal_to_str_like_stuff(self):
+        self.assertEqual(self.buffer.chars, self.chars)
+        self.assertNotEqual(self.buffer.chars, u"")
+
+    def test_str(self):
+        self.assertEqual(str(self.buffer.chars), self.chars)
+
+    def test_len(self):
+        self.assertEqual(len(self.buffer.chars), len(self.chars))
+
+    def test_iterate_over_chars(self):
+        self.assertEqual(list(self.buffer.chars), list(self.chars))
+
+    # We'll see later whether we need these or not (arbitrary access)
+    # def test_get_char_by_index(self):
+    #     self.assertEqual(self.buffer.chars[0], self.chars[0])
+
+    # def test_get_slice(self):
+    #     self.assertEqual(self.buffer.chars[1:5], self.chars[1:5])
+
+    # def test_get_open_slice(self):
+    #     self.assertEqual(self.buffer.chars[1:], self.chars[1:])
+
+    # def test_no_such_char_raises_IndexError(self):
+    #     with self.assertRaises(IndexError):
+    #         self.buffer.chars[1000000]
 
 
 class TestBufferDelegatesToLines(TestCase):

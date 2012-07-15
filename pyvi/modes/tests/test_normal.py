@@ -24,9 +24,14 @@ class TestNormalMode(ModeTest):
         self.assertEqual(self.editor.count, 238)
 
     def test_d(self):
+        self.window.buffer.lines = [u"foo", u"bar", u"baaaaz"]
         self.keypress("dl")
         self.assertEqual(self.cursor.coords, (1, 1))
-        self.window.delete.assert_called_once_with(end=(1, 2))
+        self.assertEqual(self.window.buffer.lines[1], u"br")
+
+        self.cursor.coords = (2, 1)
+        self.keypress("d4l")
+        self.assertEqual(self.window.buffer.lines[2], u"bz")
 
     def test_h(self):
         self.keypress("h")
