@@ -1,11 +1,12 @@
-from setuptools import setup
+import os
+
+from setuptools import find_packages, setup
 
 from pyvi import __version__
 
 
-with open("README.rst") as readme:
+with open(os.path.join(os.path.dirname(__file__), "README.rst")) as readme:
     long_description = readme.read()
-
 
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -13,22 +14,21 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 2",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: Implementation :: PyPy"
 ]
 
-
 setup(
-    name="PyVi",
-    packages=["pyvi"],
+    name="pyvi",
     version=__version__,
+    packages=find_packages(),
     author="Julian Berman",
     author_email="Julian@GrayVines.com",
     classifiers=classifiers,
     description="A library for implementing vim-like interfaces",
-    license="MIT/X",
+    license="MIT",
     long_description=long_description,
     url="http://github.com/Julian/PyVi",
 )
