@@ -6,9 +6,9 @@ class Editor(object):
 
     active_tab = None
 
-    def __init__(self, tabs=None, config=None, normal=normal.mode):
+    def __init__(self, tabs=None, config=None, normal=normal):
         self.config = config
-        self.normal = normal
+        self.mode = self.normal = normal
         self.count = None
 
         if tabs is None:
@@ -23,5 +23,5 @@ class Editor(object):
     def active_window(self):
         return self.active_tab.active_window
 
-    def keypress(self, key):
-        return self.mode.keypress(key)
+    def keypress(self, keys):
+        return self.mode.keypress(self, keys)
