@@ -4,6 +4,7 @@ from pyvi.modes import normal
 
 class Editor(object):
 
+    _command = None
     active_tab = None
 
     def __init__(self, tabs=None, config=None, normal=normal):
